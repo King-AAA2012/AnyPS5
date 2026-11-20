@@ -5,6 +5,7 @@ import stat
 from pathlib import Path
 import sys
 import tempfile
+import time
 
 from pad_input import BUTTONS, COMMAND_FILE_BYTES, next_sequence
 
@@ -80,6 +81,22 @@ def compile_timeline(document, sequence, repeat=1, gap_ms=200):
     return text
 
 
+def replace_command_file(temporary, path):
+    # On Windows, os.replace() cannot atomically replace a file another process
+    # holds open for reading (the runtime keeps the command file open via
+    # _wfopen in InputCommandFile.hpp). A read handle raises ERROR_SHARING_VIOLATION
+    # (PermissionError: [WinError 5]) until the handle is released, so retry a few
+    # times before giving up. POSIX is unaffected: the first attempt succeeds.
+    for attempt in range(10):
+        try:
+            os.replace(temporary, path)
+            return
+        except OSError:
+            if attempt == 9:
+                raise
+            time.sleep(0.25)
+
+
 def queue_timeline(path, text):
     metadata = None
     if os.name == "posix":
@@ -96,7 +113,7 @@ def queue_timeline(path, text):
                     os.fchown(output.fileno(), metadata.st_uid, metadata.st_gid)
                 os.fchmod(output.fileno(), stat.S_IMODE(metadata.st_mode))
             output.write(text)
-        os.replace(temporary, path)
+        replace_command_file(temporary, path)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)

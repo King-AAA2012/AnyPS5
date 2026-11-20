@@ -69,6 +69,22 @@ def timeline_sequence(command, header):
     return sequence
 
 
+def replace_command_file(temporary, path):
+    # On Windows, os.replace() cannot atomically replace a file another process
+    # holds open for reading (the runtime keeps the command file open via
+    # _wfopen in InputCommandFile.hpp). A read handle raises ERROR_SHARING_VIOLATION
+    # (PermissionError: [WinError 5]) until the handle is released, so retry a few
+    # times before giving up. POSIX is unaffected: the first attempt succeeds.
+    for attempt in range(10):
+        try:
+            os.replace(temporary, path)
+            return
+        except OSError:
+            if attempt == 9:
+                raise
+            time.sleep(0.25)
+
+
 def previous_sequence(path):
     try:
         with path.open("rb") as source:
@@ -174,7 +190,7 @@ def main():
                     os.fchown(output.fileno(), metadata.st_uid, metadata.st_gid)
                 os.fchmod(output.fileno(), stat.S_IMODE(metadata.st_mode))
             output.write(f"{sequence} {mask} {args.hold_ms}{sticks}{touch}\n")
-        os.replace(temporary, args.path)
+        replace_command_file(temporary, args.path)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
