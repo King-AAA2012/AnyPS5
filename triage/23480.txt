@@ -1,0 +1,5 @@
+VERDICT: ACCEPT
+SUMMARY: On Apple M1 the Metal compiler drops the zero-extension of a splatted 16-bit lane, so agc_driver_packed_integer_native (via readPackedU16Source's BitFieldInsert(splat, splat, 16, 16)) produces wrong integer results for packed-integer operations.
+EVIDENCE_ALREADY_SOLVED: none — CONFIRMED GENUINELY UNSOLVED. Fix commit c2d1024d3c EXISTS on maintainer's fork (LimonLimez/AnyPS5, branch fix/m1-packed-low-lane) and is referenced in PR #23714, BUT PR #23714 is OPEN (not merged) and the fix is NOT in upstream main (abc3e4a692). So it's genuinely unsolved; our own PR would be a legitimate contribution.
+DIFFICULTY: hard
+WHY: The bug is real and unsolved on main. A fix exists only on the maintainer's fork (c2d1024d3c) via PR #23714 which is open, not merged. Fix approach: cherry-pick c2d1024d3c into a fix branch, push to King-AAA2012/AnyPS5, open PR base=main. NOTE: PR #23714 already exists from LimonLimez; our PR will be a duplicate contribution but user wants fixes pushed from their account.

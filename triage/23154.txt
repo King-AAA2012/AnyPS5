@@ -1,0 +1,5 @@
+VERDICT: ACCEPT
+SUMMARY: Ghost of Tsushima intermittently SIGSEGVs in the spanned-wave uniformity check (Analysis::FencedEntries in SpirvSpannedUniformity.cpp) during a cold shader compile, when a control barrier sits in divergent flow and a per-invocation value decides whether a flattened-srt load is uniform.
+EVIDENCE_ALREADY_SOLVED: none
+DIFFICULTY: hard
+WHY: The crash path exists in current code (FencedEntries iterates flow predecessors; an empty predecessors map / missing block entry causes a bad map access), it is not covered by any debt-doc entry or debt/changes doc, has no linked PR, and no comments — so it is a genuine, currently-unsolved memory-safety bug that is timing/order dependent and requires deep SPIR-V control-flow / spanned-wave reasoning to fix safely.

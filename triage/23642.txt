@@ -1,0 +1,5 @@
+VERDICT: ACCEPT
+SUMMARY: On the mesh/geometry path, a pass-through geometry shader on a triangle strip (input primitive 6) or triangle fan (input primitive 5) only rasterizes the output of the first input primitive; subsequent primitives are dropped, so XPSemu PPSA97358's GPU probe reads black for strip/fan triangle 1.
+EVIDENCE_ALREADY_SOLVED: none
+DIFFICULTY: hard
+WHY: The issue is Open with no PRs and no "fixed in commit" comments; contributors (relativespace2K, tablefrogpillow, LeandroLP23) still investigate and have narrowed it to the geometry program's cross-lane output-primitive count (GS_ALLOC_REQ) in InstructionTranslator.cpp's geometry path, not the input-assembly path (which passes on RADV and LLPC via tablefrogpillow's test patch). Verified the repo's recompiler handles mesh shader (ShaderStageKind::Mesh, InstructionTranslator.cpp ~285-401) and that toShaderStageKind() treats Geometry as an unsupported fall-through; the prior verdict's "strippedVertexIndex" claim does not exist in the codebase.

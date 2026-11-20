@@ -1,0 +1,5 @@
+VERDICT: REJECT
+SUMMARY: On Windows, the first std::thread after libc.prx/libkernel.prx loads can cost the creating thread tens of ms of CPU, which made the nkwebkit_wtfcputime test fail under parallel load with a WTF::CPUTime assertion.
+EVIDENCE_ALREADY_SOLVED: Yes — a test-only patch was merged in commit 34a005c ("test(nkwebkit): isolate worker startup cost", by oneandonlydean, Nov 19 2026, referencing #23267) which isolates the worker's CPU burn inside the measured interval using std::latch (core/libs/prx/libSceNKWebKit/tests/WtfCpuTime.cpp). The fix is present in the local repo (lines 102-121). Comment by Lyrnc confirms 20/20 pass; 4le22io confirms non-reproduction on Windows 11/Intel. The failing test symptom is resolved; only the underlying root cause of the startup cost remains open, which is not actionable as a test failure.
+DIFFICULTY: easy
+WHY: The actionable symptom (test failure) is already fixed by a merged test-only commit; no new code change is needed to resolve the reported failure.

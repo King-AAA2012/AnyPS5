@@ -1,0 +1,5 @@
+VERDICT: ACCEPT
+SUMMARY: Scalar fp16 v_add/sub/subrev/mul_f16 (TranslationContext::float16Native in core/shader/recompiler/Translation/src/FloatInstructions.cpp) return the device's NaN (0x7fff on NVIDIA, wrong source on AMD) instead of the correct source/quiet NaN, because the scalar native path applies no NaN-source correction unlike the packed path.
+EVIDENCE_ALREADY_SOLVED: none
+DIFFICULTY: medium
+WHY: The bug is present on main (float16Native lines 318-335 has no NaN handling). A fix is ready in author Lyrnc's fork (Lyrnc/AnyPS5 fix/f16-scalar-host-nans) and reviewed positively by relativespace2K/tablefrogpillow, but it is NOT merged — the author is intentionally holding the PR behind #22950, and no PR exists yet, so it is a real, unsolved, actionable bug.

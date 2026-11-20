@@ -318,6 +318,7 @@ bool TranslationContext::float16Ternary(const RdnaInstruction& inst, IrOpcode op
 bool TranslationContext::float16Native(const RdnaInstruction& inst, IrOpcode opcode, const RdnaOperand& lhsOperand, const RdnaOperand& rhsOperand) {
     const IrU32 lhs = readF16Bits(lhsOperand);
     const IrU32 rhs = readF16Bits(rhsOperand);
+    const bool hostNans = hostFloat16Nans(inst, inst.sourceCount, false);
     IrU32 result;
     if (opcode == IrOpcode::FPMul32) {
         result = IrU32(ir.Emit(IrOpcode::FPMul16x2, IrType::U32, {&lhs.Value(), &rhs.Value()}));
@@ -329,6 +330,14 @@ bool TranslationContext::float16Native(const RdnaInstruction& inst, IrOpcode opc
         const auto infinite = [&](const IrU32& value) { return IrU1(ir.IEqual(ir.BitwiseAnd(value.Value(), ir.Constant(0x7fffu)), ir.Constant(0x7c00u))); };
         const IrU1 overflow(ir.LogicalAnd(infinite(result).Value(), ir.LogicalNot(ir.LogicalOr(infinite(lhs).Value(), infinite(rhs).Value()))));
         result = IrU32(ir.Select(overflow.Value(), ir.BitwiseOr(ir.BitwiseAnd(result.Value(), ir.Constant(0x8000u)), ir.Constant(0x7bffu)), result.Value()));
+    }
+    if (hostNans) {
+        const IrU32 zero(ir.Constant(0u));
+        const IrU1 invalidProduct(ir.LogicalOr(ir.IEqual(ir.BitwiseAnd(lhs.Value(), ir.Constant(0x7fffu)).Value(), zero.Value()), ir.IEqual(ir.BitwiseAnd(rhs.Value(), ir.Constant(0x7fffu)).Value(), zero.Value())));
+        result = IrU32(ir.Select(invalidProduct.Value(), ir.Constant(0xfe00u), result.Value()));
+        const IrU1 nanSource(ir.LogicalOr(ir.IEqual(ir.BitwiseAnd(lhs.Value(), ir.Constant(0x7fffu)).Value(), ir.Constant(0x7c00u)), ir.IEqual(ir.BitwiseAnd(rhs.Value(), ir.Constant(0x7fffu)).Value(), ir.Constant(0x7c00u))));
+        const IrU1 nanResult(ir.IEqual(ir.BitwiseAnd(result.Value(), ir.Constant(0x7fffu)).Value(), ir.Constant(0x7c00u)));
+        result = IrU32(ir.Select(ir.LogicalAnd(nanResult.Value(), nanSource.Value()), quietNan16(result).Value(), result.Value()));
     }
     write16Bits(inst.destination, clampF16Bits(inst.destination, result));
     return true;

@@ -1,0 +1,5 @@
+VERDICT: ACCEPT
+SUMMARY: Exports that throw a host-safety fault (null/unreadable guest pointer, console asserts) via NotImplemented_nid_no_patch are counted as unfinished forever by tools/progress.py, so progress is understated and real gaps are hidden.
+EVIDENCE_ALREADY_SOLVED: none
+DIFFICULTY: medium
+WHY: The proposed second helper (GuestFault_nid_no_patch) does not exist in libc/include/General.hpp, and progress.py (STUB="NotImplemented_nid_no_patch") only treats absence of NotImplemented_nid_no_patch calls as implemented, so the symptom is real and current. No PR addresses it (only open PR is unrelated #23468) and no comment claims it fixed. It is a real, unsolved feature request.

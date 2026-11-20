@@ -1,0 +1,5 @@
+VERDICT: REJECT
+SUMMARY: When a small device-local BAR heap (e.g. 214 MiB heap 2) is over its VK_EXT_memory_budget, BufferPool::heapOverBudget() treats every device-local heap as under pressure, so PutImageMemory frees pooled images and releaseImageAllocation refuses to retain empty image blocks allocated from the large heap 0 — failing 5 image-memory tests.
+EVIDENCE_ALREADY_SOLVED: PR #23396 ("fix(agc): keep image pooling when only another heap is over budget") fixes exactly this by making heapOverBudget() per-heap (takes the returned memory type and checks only that heap's budget). It was approved by MarcZX10 and merged onto main as 5f5855e522 (head 35a28e06b3), verified by relativespace2K, Lyrnc and Colewiz7 across multiple GPUs. A follow-up comment by Lyrnc notes a related standalone-allocation edge case (companion commit b01898d75f) still open, but the reported bug is resolved.
+DIFFICULTY: easy
+WHY: The described symptom matches current main behaviour (heapOverBudget() is still global in this checkout), but the fix already exists upstream in a merged, reviewed PR, so it is not actionable as a new task.

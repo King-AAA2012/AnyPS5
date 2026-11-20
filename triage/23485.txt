@@ -1,0 +1,5 @@
+VERDICT: ACCEPT
+SUMMARY: The AGC draw cache charges only variantBytes() when caching a draw variant and never accounts for the retained shader-result metadata (MetadataBytes), so cached variants keep shader results alive beyond the cache's declared byte budget, causing eviction pressure and wrong hits on GTA V (PPSA04264).
+EVIDENCE_ALREADY_SOLVED: none — PR #23486 ("fix(agc): account retained shader results in the draw cache", by lgqdaxia) exists but is OPEN and not merged; main still lacks drawCacheResultReferences and the MetadataBytes accounting in accountDrawVariant.
+DIFFICULTY: medium
+WHY: The fix is a contained change to the draw cache byte-accounting path (add retained shader-result metadata to the variant's byte estimate in accountDrawVariant / DrawCache.cpp), but it requires correct understanding of the cache's byte-budget and eviction logic and touching the variant accounting + stats, so it is not trivial.

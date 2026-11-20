@@ -1,0 +1,5 @@
+VERDICT: ACCEPT
+SUMMARY: On the AMD Radeon iGPU (gfx1036), `agc_driver_recorder` intermittently fails because the previous test case's storage image is still registered in the global `LiveImages` live-registry when the next case reuses the same guest memory, so the live-overlap cleanup is not reliably per-case.
+EVIDENCE_ALREADY_SOLVED: none
+DIFFICULTY: medium
+WHY: Issue #23629 (author XFlawless1, opened 2026-11-19) is a fresh flaky failure in `agc_driver_recorder` (one failure in 6 parallel `ctest -j6` runs; passed 5/5 serial) with 0 comments, no labels, and no linked/merged PR. The symptom matches current code: the test at core/libs/prx/libSceAgcDriver/tests/Recorder.cpp:10172 polls `StorageTexture::AnyLiveOverlaps(reused)` and asserts the earlier case's image clears within 10s via `recorder.Reap()`, while the live registry (Texture.cpp `LiveImages`, `Live()`, `AnyLiveOverlaps`) is a single process-global list of storage images. The fix text is not present as a fix, and no commit/PR addresses it, so it is an open, actionable per-case image-scope bug worth fixing.
